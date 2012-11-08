@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script type="text/javascript" src="DateTime.js"></script>
+</head>
+<body>
+    <script type="text/javascript">
+
+        var now = new DateTime(new Date());
+        for (var name in now) {
+            if (typeof now[name] != 'function') {
+                console.log(name + ': ' + now[name]);
+            }
+        }
+        console.log(now.toString('yyyy-MM-dd HH:mm:ss.fff'));
+        console.log(now.toString('M/d/yyyy h:m:s.fff tt'));
+        console.log(now.toString('MMM ddd, yyyy hh:mm:ss.fff tt'));
+        console.log(now.toString('MMMM MMM WWWW WWW'));
+
+        console.log('Standard Format');
+        var sf = ['d', 'D', 'f', 'F', 'g', 'G', 'm', 'o', 'R', 's', 't', 'T', 'u', 'U', 'y'];
+        for (var i = 0; i < sf.length; i++) {
+            console.log(sf[i] + ': ' + now.toString(sf[i]));
+        }
+
+    </script>
+</body>
+</html>
