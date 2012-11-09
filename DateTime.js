@@ -4,8 +4,12 @@
     */
     function DateTime(value) {
         // TODO: validation & parse of different type
-        this.value = value;
-
+        if (value instanceof Date) {
+            this.value = value;
+        }
+        else {
+            this.value = new Date(value);
+        }
         this.year = this.value.getFullYear();
         this.month = this.value.getMonth() + 1;
         this.day = this.value.getDate();
@@ -15,16 +19,17 @@
         this.minute = this.value.getMinutes();
         this.second = this.value.getSeconds();
         this.millisecond = this.value.getMilliseconds();
-
     };
     DateTime.now = function () {
         return new DateTime(new Date());
     };
     // yyyy-MM-dd hh:mm:ss
     // MM/dd/yyyy hh:mm:ss
-    DateTime.parse = function (str) {
-        if (typeof str == 'string') {
-
+    DateTime.parse = function (value) {
+        if (typeof value == 'string') {
+            return new DateTime(value);
+        } else if (typeof value == 'number') {
+            return new DateTime(new Date(value));
         }
         return NaN;
     };
