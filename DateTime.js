@@ -1,9 +1,10 @@
 ; (function (window, undefine) {
     /*
-    *   DateTime
+    *   DateTime constructor
+    *   Parameters:
+    *       value   yyyy-MM-dd hh:mm:ss or MM/dd/yyyy hh:mm:ss
     */
     function DateTime(value) {
-        // TODO: validation & parse of different type
         if (value instanceof Date) {
             this.value = value;
         }
@@ -23,17 +24,14 @@
     DateTime.now = function () {
         return new DateTime(new Date());
     };
-    // yyyy-MM-dd hh:mm:ss
-    // MM/dd/yyyy hh:mm:ss
-    DateTime.parse = function (value) {
-        if (typeof value == 'string') {
-            return new DateTime(value);
-        } else if (typeof value == 'number') {
-            return new DateTime(new Date(value));
-        }
-        return NaN;
+    DateTime.diff = function (date1, date2) {
+        return new TimeSpan(date1 - date2);
     };
+
     (function (p) {
+        p.date = function () {
+            return new DateTime(new Date(this.value.getFullYear(), this.value.getMonth(), this.value.getDate(), 0, 0, 0, 0));
+        };
         p.addYears = function (value) {
             var newDate = new Date(this.value);
             return newDate.setFullYear(this.value.getFullYear() + value) ? new DateTime(newDate) : NaN;
@@ -53,15 +51,18 @@
         p.addMilliseconds = function (value) {
             return new DateTime(new Date(this.value.getTime() + value));
         };
+        p.diff = function (value) {
+            return DateTime.diff(this, value);
+        };
 
         p.valueOf = function () {
             return this.value.valueOf();
         };
         p.toString = function (format) {
             if (this.value == null) {
-                return 'null';
+                return null;
             }
-            if (typeof format == 'string') {
+            if (typeof format === 'string') {
                 var pc = new ParamContainer();
                 var r = getStandardFormat(format, pc);
 
@@ -133,13 +134,13 @@
                 case 'g': return 'M/d/yyyy h:mm tt';
                 case 'G': return 'M/d/yyyy h:mm:ss tt';
                 case 'm': return 'MMMM dd';
-                case 'o': return '';
+                case 'o': return 'yyyy-MM-ddTHH:mm:ss.fff';
                 case 'R': return 'WWW, dd MMM yyyy H:mm:ss ' + pc.push('GMT').name;
                 case 's': return 'yyyy-MM-ddTHH:mm:ss';
                 case 't': return 'h:mm tt';
                 case 'T': return 'h:mm:ss tt';
                 case 'u': return 'yyyy-MM-dd H:mm:ssZ';
-                case 'U': return '' //'WWWW, MMMM dd, yyyy';
+                case 'U': return 'WWWW, MMMM dd, yyyy h:mm:ss tt';
                 case 'y': return 'MMMM, yyyy';
                 default: return format;
             }
@@ -191,8 +192,77 @@
     /*
     *   TimeSpan
     */
-    function TimeSpan() {
+    function TimeSpan(value) {
+        if (typeof value === 'number') {
+            if (!(value > 0 || value < 0)) {
+                value = 0;
+            }
+            this.value = value;
+        } else if (typeof value === 'string') {
+            var re = value.match(/^(?:(\d+)[\.\:])?([012]\d)\:([0-5]?\d)\:([0-5]?\d)(?:\.(\d{1,3}))?$/);
+            if (re) {
+                var days = re[1] ? +re[1] : 0;
+                var hours = +re[2];
+                var minutes = +re[3];
+                var seconds = +re[4];
+                var milliseconds = re[5] ? (+re[5] * Math.pow(10, 3 - re[5].length)) : 0;
+                this.value = (((days * 24 + hours) * 60 + minutes) * 60 + seconds) * 1000 + milliseconds;
+            } else {
+                this.value = 0;
+            }
+        } else if (typeof value === 'object' && value instanceof TimeSpan) {
+            this.value = value.value;
+        } else {
+            this.value = 0;
+        }
 
+        this.totalMilliseconds = this.value;
+        this.totalSeconds = this.totalMilliseconds / 1000;
+        this.totalMinutes = this.totalSeconds / 60;
+        this.totalHours = this.totalMinutes / 60;
+        this.totalDays = this.totalHours / 24;
+
+        this.milliseconds = this.value % 1000;
+        this.seconds = Math.floor(this.totalSeconds) % 60;
+        this.minutes = Math.floor(this.totalMinutes) % 60;
+        this.hours = Math.floor(this.totalHours) % 24;
+        this.days = Math.floor(this.totalDays);
+
+        (function (p) {
+            p.valueOf = function () {
+                return this.value.valueOf();
+            };
+            p.toString = function (format) {
+                if (this.value == null) {
+                    return null;
+                }
+                if (typeof format === 'string') {
+                    var r = format;
+
+                    r = r.replace(/d/g, Math.abs(this.days));
+
+                    r = r.replace(/hh/g, (Math.abs(this.hours) > 9 ? '' : '0') + Math.abs(this.hours));
+                    r = r.replace(/h/g, Math.abs(this.hours));
+
+                    r = r.replace(/mm/g, (Math.abs(this.minutes) > 9 ? '' : '0') + Math.abs(this.minutes));
+                    r = r.replace(/m/g, Math.abs(this.minutes));
+
+                    r = r.replace(/ss/g, (Math.abs(this.seconds) > 9 ? '' : '0') + Math.abs(this.seconds));
+                    r = r.replace(/s/g, Math.abs(this.seconds));
+
+                    r = r.replace(/fff/g, (Math.abs(this.milliseconds) > 99 ? '' : (Math.abs(this.milliseconds) > 9 ? '0' : '00')) + Math.abs(this.milliseconds));
+                    r = r.replace(/ff/g, (Math.abs(this.milliseconds) / 10 > 9 ? '' : '0') + Math.round(Math.abs(this.milliseconds) / 10));
+                    r = r.replace(/f/g, Math.round(Math.abs(this.milliseconds) / 100));
+
+                    if (value < 0) {
+                        r = '-' + r;
+                    }
+                    return r;
+                }
+                return this.days == 0 ? p.toString.call(this, 'hh:mm:ss.fff') : p.toString.call(this, 'd.hh:mm:ss.fff');
+            }
+
+        })(TimeSpan.prototype);
     }
     window.DateTime = DateTime;
     window.TimeSpan = TimeSpan;

@@ -8,23 +8,30 @@
 </head>
 <body>
     <script type="text/javascript">
-
-        var now = new DateTime(new Date());
-        for (var name in now) {
-            if (typeof now[name] != 'function') {
-                console.log(name + ': ' + now[name]);
+        function printAttributes(obj) {
+            for (var name in obj) {
+                if (typeof obj[name] != 'function') {
+                    console.log(name + ': ' + obj[name]);
+                }
             }
         }
-        console.log(now.toString('yyyy-MM-dd HH:mm:ss.fff'));
-        console.log(now.toString('M/d/yyyy h:m:s.fff tt'));
-        console.log(now.toString('MMM ddd, yyyy hh:mm:ss.fff tt'));
-        console.log(now.toString('MMMM MMM WWWW WWW'));
+
+        var now = new DateTime(new Date());
+        printAttributes(now);
+        //console.log(now.toString('yyyy-MM-dd HH:mm:ss.fff'));
+        //console.log(now.toString('M/d/yyyy h:m:s.fff tt'));
+        //console.log(now.toString('MMM ddd, yyyy hh:mm:ss.fff tt'));
+        //console.log(now.toString('MMMM MMM WWWW WWW'));
 
         console.log('Standard Format');
         var sf = ['d', 'D', 'f', 'F', 'g', 'G', 'm', 'o', 'R', 's', 't', 'T', 'u', 'U', 'y'];
         for (var i = 0; i < sf.length; i++) {
             console.log(sf[i] + ': ' + now.toString(sf[i]));
         }
+
+        var sp = new TimeSpan(-143589);
+        printAttributes(sp);
+        console.log(sp.toString());
 
     </script>
 </body>
